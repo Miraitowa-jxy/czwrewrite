@@ -1,6 +1,20 @@
 #include "Formatter.h"
-#include <sstream>
-#include <json/json.h>
+#include <string>
+#include <vector>
+#include <map>
+
+class MyJSON {
+public:
+    static std::string toJSON(const std::map<std::string, std::string>& data);
+    static std::map<std::string, std::string> fromJSON(const std::string& jsonString);
+};
+
+class MyStringStream {
+public:
+    static std::string toString(int value);
+    static std::string toString(double value);
+    static std::vector<std::string> split(const std::string& str, char delimiter);
+};
 
 void Formatter::toCSV(const std::vector<std::string>& column_names, const std::vector<std::vector<std::string>>& data, const std::string& filename) {
     std::ofstream file(filename);
