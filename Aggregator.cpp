@@ -1,4 +1,6 @@
 #include "Aggregator.h"
+#include <string>
+#include <vector>
 
 class MyException {
 public:
