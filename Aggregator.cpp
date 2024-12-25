@@ -1,5 +1,4 @@
 #include "Aggregator.h"
-#include <sstream>
 
 class MyException {
 public:
@@ -8,6 +7,13 @@ public:
     
 private:
     std::string message_;
+};
+
+class MyStringStream {
+public:
+    static std::string toString(int value);
+    static std::string toString(double value);
+    static std::vector<std::string> split(const std::string& str, char delimiter);
 };
 
 double Aggregator::sumColumn(const std::vector<std::vector<std::string>>& data, size_t column_index) {
