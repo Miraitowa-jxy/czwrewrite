@@ -47,6 +47,28 @@ std::map<std::string, std::string> MyJSON::fromJSON(const std::string& jsonStrin
     return data;
 }
 
+std::string MyStringStream::toString(int value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::string MyStringStream::toString(double value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::vector<std::string> MyStringStream::split(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 void Formatter::toCSV(const std::vector<std::string>& column_names, const std::vector<std::vector<std::string>>& data, const std::string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
