@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <stdexcept>
 using namespace std;
 
 // Alignment Enum
@@ -49,7 +51,7 @@ public:
                 return entry.value;
             }
         }
-        throw "Key not found";
+        throw runtime_error("Key not found");
     }
 
     bool contains(const string& key) const {
@@ -75,7 +77,7 @@ public:
     }
 };
 
-// Custom implementation of exceptions
+// Custom exception handling
 class InvalidArgumentException {
 public:
     string message;
@@ -313,3 +315,6 @@ int main() {
     table.addRow({"Alice", "30", "New York"});
     table.addRow({"Bob", "25", "Los Angeles"});
     table.addRow({"Charlie", "35", "Chicago"});
+    
+    table.print();
+}
