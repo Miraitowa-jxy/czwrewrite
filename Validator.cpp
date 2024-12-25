@@ -1,4 +1,6 @@
 #include "Validator.h"
+#include <string>
+#include <vector>
 
 class MyRegex {
 public:
