@@ -1,6 +1,14 @@
 #include "Aggregator.h"
-#include <stdexcept>
 #include <sstream>
+
+class MyException {
+public:
+    MyException(const std::string& message) : message_(message) {}
+    const std::string& what() const { return message_; }
+    
+private:
+    std::string message_;
+};
 
 double Aggregator::sumColumn(const std::vector<std::vector<std::string>>& data, size_t column_index) {
     double sum = 0;
