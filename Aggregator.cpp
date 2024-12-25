@@ -18,6 +18,28 @@ public:
     static std::vector<std::string> split(const std::string& str, char delimiter);
 };
 
+std::string MyStringStream::toString(int value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::string MyStringStream::toString(double value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::vector<std::string> MyStringStream::split(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 double Aggregator::sumColumn(const std::vector<std::vector<std::string>>& data, size_t column_index) {
     double sum = 0;
     for (const auto& row : data) {
