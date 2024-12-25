@@ -1,9 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <fstream>
-#include <iomanip>
-#include <stdexcept>
 using namespace std;
 
 // Alignment Enum
@@ -21,22 +18,96 @@ public:
     char corner;
     Alignment alignment;
 
-    Style(char vertical, char horizontal, char corner, Alignment align)
+    Style(char vertical = '|', char horizontal = '-', char corner = '+', Alignment align = LEFT)
         : vertical_border(vertical), horizontal_border(horizontal), corner(corner), alignment(align) {}
 };
 
+// Custom implementation of map (simple key-value pair)
+struct KeyValuePair {
+    string key;
+    size_t value;
+};
+
+class CustomMap {
+private:
+    vector<KeyValuePair> entries;
+
+public:
+    void insert(const string& key, size_t value) {
+        for (auto& entry : entries) {
+            if (entry.key == key) {
+                entry.value = value;
+                return;
+            }
+        }
+        entries.push_back({key, value});
+    }
+
+    size_t at(const string& key) const {
+        for (const auto& entry : entries) {
+            if (entry.key == key) {
+                return entry.value;
+            }
+        }
+        throw "Key not found";
+    }
+
+    bool contains(const string& key) const {
+        for (const auto& entry : entries) {
+            if (entry.key == key) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void erase(const string& key) {
+        for (auto it = entries.begin(); it != entries.end(); ++it) {
+            if (it->key == key) {
+                entries.erase(it);
+                return;
+            }
+        }
+    }
+
+    vector<KeyValuePair>& getEntries() {
+        return entries;
+    }
+};
+
+// Custom implementation of exceptions
+class InvalidArgumentException {
+public:
+    string message;
+    InvalidArgumentException(const string& msg) : message(msg) {}
+};
+
+class OutOfRangeException {
+public:
+    string message;
+    OutOfRangeException(const string& msg) : message(msg) {}
+};
+
+class RuntimeException {
+public:
+    string message;
+    RuntimeException(const string& msg) : message(msg) {}
+};
+
+// Table Class
 class Table {
 private:
     vector<string> column_names;
     vector<vector<string>> data;
     Style style;
     size_t column_count;
+    CustomMap column_indices;
 
     // Helper to compute column widths
     vector<size_t> computeColumnWidths() const {
         vector<size_t> widths(column_count, 0);
         for (size_t i = 0; i < column_count; ++i) {
-            widths[i] = max(widths[i], column_names[i].length());
+            widths[i] = column_names[i].length();
             for (const auto& row : data) {
                 if (i < row.size()) {
                     widths[i] = max(widths[i], row[i].length());
@@ -46,7 +117,7 @@ private:
         return widths;
     }
 
-    // Helper to center-align text
+    // Helper to align text
     string alignText(const string& text, size_t width, Alignment align) const {
         if (align == LEFT) {
             return text + string(width - text.length(), ' ');
@@ -84,13 +155,17 @@ private:
 
 public:
     // Constructor
-    Table(const vector<string>& columns, const Style& style = Style('|', '-', '+', LEFT))
-        : column_names(columns), style(style), column_count(columns.size()) {}
+    Table(const vector<string>& columns, const Style& style = Style())
+        : column_names(columns), style(style), column_count(columns.size()) {
+        for (size_t i = 0; i < columns.size(); ++i) {
+            column_indices.insert(columns[i], i);
+        }
+    }
 
     // Add a row to the table
     void addRow(const vector<string>& row) {
         if (row.size() > column_count) {
-            throw invalid_argument("Row size exceeds column count");
+            throw InvalidArgumentException("Row size exceeds column count");
         }
         data.push_back(row);
     }
@@ -98,6 +173,7 @@ public:
     // Add a column to the table
     void addColumn(const string& column_name, const vector<string>& column_data) {
         column_names.push_back(column_name);
+        column_indices.insert(column_name, column_count);
         ++column_count;
         for (size_t i = 0; i < max(data.size(), column_data.size()); ++i) {
             if (i >= data.size()) {
@@ -107,6 +183,27 @@ public:
                 data[i].push_back(column_data[i]);
             } else {
                 data[i].push_back("");
+            }
+        }
+    }
+
+    // Remove a column
+    void removeColumn(const string& column_name) {
+        if (!column_indices.contains(column_name)) {
+            throw InvalidArgumentException("Column not found");
+        }
+        size_t index = column_indices.at(column_name);
+        column_names.erase(column_names.begin() + index);
+        column_indices.erase(column_name);
+        for (auto& row : data) {
+            if (index < row.size()) {
+                row.erase(row.begin() + index);
+            }
+        }
+        --column_count;
+        for (auto& pair : column_indices.getEntries()) {
+            if (pair.value > index) {
+                --pair.value;
             }
         }
     }
@@ -130,36 +227,30 @@ public:
 
     // Save the table to a file
     void saveToFile(const string& file_name, bool append = false) const {
-        ofstream file;
-        if (append) {
-            file.open(file_name, ios::app);
-        } else {
-            file.open(file_name);
-        }
-        if (!file.is_open()) {
-            throw runtime_error("Could not open file");
+        FILE* file = fopen(file_name.c_str(), append ? "a" : "w");
+        if (!file) {
+            throw RuntimeException("Could not open file");
         }
 
         vector<size_t> widths = computeColumnWidths();
         auto writeSeparator = [&]() {
-            file << style.corner;
+            fputc(style.corner, file);
             for (size_t i = 0; i < column_count; ++i) {
-                file << string(widths[i] + 2, style.horizontal_border) << style.corner;
+                for (size_t j = 0; j < widths[i] + 2; ++j) {
+                    fputc(style.horizontal_border, file);
+                }
+                fputc(style.corner, file);
             }
-            file << endl;
+            fputc('\n', file);
         };
 
         auto writeRow = [&](const vector<string>& row) {
-            file << style.vertical_border;
+            fputc(style.vertical_border, file);
             for (size_t i = 0; i < column_count; ++i) {
-                if (i < row.size()) {
-                    file << " " << alignText(row[i], widths[i], style.alignment) << " ";
-                } else {
-                    file << " " << string(widths[i], ' ') << " ";
-                }
-                file << style.vertical_border;
+                string text = (i < row.size()) ? alignText(row[i], widths[i], style.alignment) : string(widths[i], ' ');
+                fprintf(file, " %s %c", text.c_str(), style.vertical_border);
             }
-            file << endl;
+            fputc('\n', file);
         };
 
         writeSeparator();
@@ -169,7 +260,51 @@ public:
             writeRow(row);
         }
         writeSeparator();
-        file.close();
+        fclose(file);
+    }
+
+    // Get column names
+    vector<string> getColumnNames() const {
+        return column_names;
+    }
+
+    // Get a specific row by index
+    vector<string> getRow(size_t index) const {
+        if (index >= data.size()) {
+            throw OutOfRangeException("Row index out of range");
+        }
+        return data[index];
+    }
+
+    // Sort table by a specific column
+    void sortByColumn(const string& column_name, bool ascending = true) {
+        if (!column_indices.contains(column_name)) {
+            throw InvalidArgumentException("Column not found");
+        }
+        size_t index = column_indices.at(column_name);
+        for (size_t i = 0; i < data.size(); ++i) {
+            for (size_t j = i + 1; j < data.size(); ++j) {
+                bool condition = ascending ? (data[i][index] > data[j][index]) : (data[i][index] < data[j][index]);
+                if (condition) {
+                    swap(data[i], data[j]);
+                }
+            }
+        }
+    }
+
+    // Search table by a specific column
+    vector<vector<string>> searchByColumn(const string& column_name, const string& value) const {
+        if (!column_indices.contains(column_name)) {
+            throw InvalidArgumentException("Column not found");
+        }
+        size_t index = column_indices.at(column_name);
+        vector<vector<string>> results;
+        for (const auto& row : data) {
+            if (index < row.size() && row[index] == value) {
+                results.push_back(row);
+            }
+        }
+        return results;
     }
 };
 
@@ -178,11 +313,3 @@ int main() {
     table.addRow({"Alice", "30", "New York"});
     table.addRow({"Bob", "25", "Los Angeles"});
     table.addRow({"Charlie", "35", "Chicago"});
-
-    table.setStyle(Style('|', '=', '+', CENTER));
-    table.print();
-
-    table.saveToFile("output.txt");
-
-    return 0;
-}
