@@ -1,6 +1,22 @@
 #include "Validator.h"
-#include <regex>
-#include <stdexcept>
+
+class MyRegex {
+public:
+    static bool match(const std::string& pattern, const std::string& text);
+    static bool matchInt(const std::string& text);
+    static bool matchFloat(const std::string& text);
+    static bool matchEmail(const std::string& text);
+    static bool matchDate(const std::string& text);
+};
+
+class MyException {
+public:
+    MyException(const std::string& message) : message_(message) {}
+    const std::string& what() const { return message_; }
+    
+private:
+    std::string message_;
+};
 
 bool Validator::validateInteger(const std::string& str) {
     std::regex pattern("^[+-]?[0-9]+$");
