@@ -7,6 +7,8 @@
 #include "Merger.h"
 #include "Sorter.h"
 #include "TableEditor.h"
+#include "Importer.h"
+
 using namespace std;
 
 // Alignment Enum
