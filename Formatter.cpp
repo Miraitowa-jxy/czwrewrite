@@ -16,6 +16,37 @@ public:
     static std::vector<std::string> split(const std::string& str, char delimiter);
 };
 
+std::string MyJSON::toJSON(const std::map<std::string, std::string>& data) {
+    std::ostringstream oss;
+    oss << "{";
+    for (auto it = data.begin(); it != data.end(); ++it) {
+        oss << "\"" << it->first << "\": \"" << it->second << "\"";
+        if (std::next(it) != data.end()) {
+            oss << ", ";
+        }
+    }
+    oss << "}";
+    return oss.str();
+}
+
+std::map<std::string, std::string> MyJSON::fromJSON(const std::string& jsonString) {
+    std::map<std::string, std::string> data;
+    std::string key, value;
+    size_t start_pos = 0, end_pos = 0;
+    while ((start_pos = jsonString.find("\"", end_pos)) != std::string::npos) {
+        end_pos = jsonString.find("\"", start_pos + 1);
+        key = jsonString.substr(start_pos + 1, end_pos - start_pos - 1);
+
+        start_pos = jsonString.find("\"", end_pos + 1);
+        end_pos = jsonString.find("\"", start_pos + 1);
+        value = jsonString.substr(start_pos + 1, end_pos - start_pos - 1);
+
+        data[key] = value;
+        end_pos = end_pos + 1;
+    }
+    return data;
+}
+
 void Formatter::toCSV(const std::vector<std::string>& column_names, const std::vector<std::vector<std::string>>& data, const std::string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
