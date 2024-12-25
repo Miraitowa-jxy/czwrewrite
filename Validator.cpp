@@ -21,7 +21,7 @@ private:
 };
 
 bool MyRegex::match(const std::string& pattern, const std::string& text) {
-    // 这里只是一个简单的示例，实际实现可以更复杂
+
     return text.find(pattern) != std::string::npos;
 }
 
