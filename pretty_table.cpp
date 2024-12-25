@@ -3,6 +3,10 @@
 #include <string>
 #include <algorithm>
 #include <stdexcept>
+#include "Exporter.h"
+#include "Merger.h"
+#include "Sorter.h"
+#include "TableEditor.h"
 using namespace std;
 
 // Alignment Enum
@@ -316,5 +320,45 @@ int main() {
     table.addRow({"Bob", "25", "Los Angeles"});
     table.addRow({"Charlie", "35", "Chicago"});
     
-    table.print();
+    bool running = true;
+    while (running) {
+        std::cout << "选择操作：\n";
+        std::cout << "1. 导出为CSV\n";
+        std::cout << "2. 合并表格\n";
+        std::cout << "3. 排序\n";
+        std::cout << "4. 编辑表格\n";
+        std::cout << "5. 退出\n";
+        
+        int choice;
+        std::cin >> choice;
+        
+        switch (choice) {
+            case 1:
+                Exporter::exportToCSV(table, "output.csv");
+                std::cout << "表格已导出为 CSV 文件。\n";
+                break;
+            case 2: {
+                Table table2({"Name", "Age", "City"});
+                table2.addRow({"David", "40", "Houston"});
+                Table mergedTable = Merger::merge(table, table2);
+                std::cout << "表格已合并。\n";
+                break;
+            }
+            case 3:
+                Sorter::sortByColumn(table, "Age", true);
+                std::cout << "表格已按年龄升序排序。\n";
+                break;
+            case 4:
+                TableEditor::editCell(table, 1, 1, "26");
+                std::cout << "表格已编辑。\n";
+                break;
+            case 5:
+                running = false;
+                break;
+            default:
+                std::cout << "无效的选择。\n";
+                break;
+        }
+    }
+    return 0;
 }
